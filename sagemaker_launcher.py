@@ -15,7 +15,7 @@ def launch_training_job():
     estimator = SKLearn(
         entry_point="src/sagemaker_train.py",
         role=role,
-        instance_type="ml.t2.medium",
+        instance_type="ml.m5.large",
         framework_version="1.0-1",
         sagemaker_session=session,
         output_path=s3_output_path,
