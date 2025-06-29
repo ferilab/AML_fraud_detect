@@ -3,7 +3,7 @@ import boto3
 import sagemaker
 from sagemaker.sklearn.estimator import SKLearn
 
-
+# AmazonS3FullAccess or a Custom permission to allow necessary access is required
 def launch_training_job():
     role = "arn:aws:iam::990682088412:role/SageMakerExecutionRole_AML"  # Replace this with your own ARN
     s3_input_path = "s3://aml-model-bk/data/"
