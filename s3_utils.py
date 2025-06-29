@@ -1,14 +1,14 @@
 
 import boto3
-import kaggle
+# import kaggle
 
 # Note: See the guide at the bottom
 
 def upload_to_s3(local_path, bucket_name, s3_key):
     
     # Download the dataset from Kaggle
-    kaggle.api.dataset_download_files('waqi786/global-black-money-transactions-dataset',
-                                       path='data/', unzip=True)
+    # kaggle.api.dataset_download_files('waqi786/global-black-money-transactions-dataset',
+                                    #    path='data/', unzip=True)
     # Upload the dataset to our bucket on S3
     s3 = boto3.client('s3',
         aws_access_key_id='AKIA6NKKBAPOEGABOVJC',
