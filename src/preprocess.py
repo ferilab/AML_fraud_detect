@@ -8,7 +8,7 @@ def load_and_clean_data(filepath):
     df = df.dropna(subset=['Amount (USD)', 'Country', 'Source of Money'])
 
     # Remove transaction ID (non-informative)
-    df = df.drop(columns=['Transaction ID'])
+    df = df.drop(columns=['Transaction ID'], errors='ignore')
 
     # Encode date into features (optional)
     df['Transaction Month'] = df['Date of Transaction'].dt.month

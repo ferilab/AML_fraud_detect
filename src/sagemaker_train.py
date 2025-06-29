@@ -15,6 +15,10 @@ if __name__ == "__main__":
 
     # Read data from SageMaker input channel
     data_path = os.path.join(args.data_dir, 'Big_Black_Money_Dataset.csv')
+    
+    print(f"Looking for data at {data_path}")
+    print(f"Directory listing: {os.listdir(args.data_dir)}")
+
     X, y = load_and_clean_data(data_path)
     X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, test_size=0.2)
 
