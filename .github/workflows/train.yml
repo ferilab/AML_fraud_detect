@@ -6,7 +6,7 @@ on:
 
 jobs:
   train-on-sagemaker:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04 # We use a fix ubentu ver stinead of ubuntu-latest as it is stable and fully supported
 
     env:
       AWS_REGION: us-east-2
