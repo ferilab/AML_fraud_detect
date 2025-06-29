@@ -29,7 +29,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           python -c "from s3_utils import upload_to_s3; \
-            upload_to_s3('data/global_black_money_transactions.csv', 'aml-model-bk', 'data/global_black_money_transactions.csv')"
+            upload_to_s3('data/Big_Black_Money_Dataset.csv', 'aml-model-bk', 'data/Big_Black_Money_Dataset.csv')"
 
       - name: Launch SageMaker training job
         env:

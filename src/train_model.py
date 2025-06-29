@@ -27,4 +27,4 @@ def train_and_save_model(data_path, model_path='models/aml_model.pkl'):
     print(f"Model saved to {model_path}")
 
 if __name__ == "__main__":
-    train_and_save_model('data/global_black_money_transactions.csv')
+    train_and_save_model('data/Big_Black_Money_Dataset.csv')

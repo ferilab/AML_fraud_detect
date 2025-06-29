@@ -14,7 +14,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Read data from SageMaker input channel
-    data_path = os.path.join(args.data_dir, 'global_black_money_transactions.csv')
+    data_path = os.path.join(args.data_dir, 'Big_Black_Money_Dataset.csv')
     X, y = load_and_clean_data(data_path)
     X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, test_size=0.2)
 
