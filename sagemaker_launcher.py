@@ -14,6 +14,7 @@ def launch_training_job():
 
     estimator = SKLearn(
         entry_point="sagemaker_train.py",
+        source_dir='.',  # This includes preprocess.py and any needed modules
         role=role,
         instance_type="ml.m5.large",
         framework_version="1.0-1",
