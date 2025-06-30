@@ -13,7 +13,7 @@ def launch_training_job():
     session = sagemaker.Session()
 
     estimator = SKLearn(
-        entry_point="src/sagemaker_train.py",
+        entry_point="sagemaker_train.py",
         role=role,
         instance_type="ml.m5.large",
         framework_version="1.0-1",

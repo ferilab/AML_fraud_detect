@@ -3,7 +3,7 @@ import argparse
 import os
 import joblib
 import pandas as pd
-from src.preprocess import load_and_clean_data
+from preprocess import load_and_clean_data
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 

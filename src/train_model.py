@@ -1,9 +1,14 @@
 import os
+import sys
 import joblib
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
-from src.preprocess import load_and_clean_data
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from preprocess import load_and_clean_data
+
+from preprocess import load_and_clean_data
 
 def train_and_save_model(data_path, model_path='models/aml_model.pkl'):
     print(f"Loading data from: {data_path}")
