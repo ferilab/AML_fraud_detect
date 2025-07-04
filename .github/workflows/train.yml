@@ -24,6 +24,7 @@ jobs:
         run: |
           mkdir -p ~/.kaggle
           echo "${{ secrets.KAGGLE_JSON }}" > ~/.kaggle/kaggle.json
+          sed -i 's/\\n/\n/g' ~/.kaggle/kaggle.json
           chmod 600 ~/.kaggle/kaggle.json
 
       - name: Install dependencies
