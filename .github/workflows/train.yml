@@ -20,32 +20,34 @@ jobs:
         with:
           python-version: 3.9
 
-      - name: Set up Kaggle credentials
-        run: |
-          mkdir -p ~/.kaggle
-          echo "${{ secrets.KAGGLE_JSON }}" > ~/.kaggle/kaggle.json
-          chmod 600 ~/.kaggle/kaggle.json
-          # --- START DEBUGGING KAGGLE CREDENTIALS ---
-          echo "--- Debugging Kaggle Setup ---"
-          echo "Listing contents of ~/.kaggle/ :"
-          ls -la ~/.kaggle/
-          echo "Permissions of ~/.kaggle/kaggle.json :"
-          stat -c "%a %n" ~/.kaggle/kaggle.json # Linux command to show permissions
-          echo "Content of ~/.kaggle/kaggle.json (!!! CAUTION: YOUR KAGGLE API KEY WILL BE VISIBLE IN LOGS !!!):"
-          cat ~/.kaggle/kaggle.json
-          echo "Attempting a simple Kaggle CLI command to test authentication (requires 'kaggle' to be installed):"
-          # The path to kaggle CLI might differ; adjust if necessary based on where your pip installs to
-          /opt/hostedtoolcache/Python/3.9.23/x64/bin/kaggle datasets list --page 1 --page-size 5
-          echo "--- End Debugging Kaggle Setup ---"
-          # --- END DEBUGGING KAGGLE CREDENTIALS ---
-
       - name: Install dependencies
         run: pip install -r requirements.txt
+
+      # - name: Set up Kaggle credentials
+      #   run: |
+      #     mkdir -p ~/.kaggle
+      #     echo "${{ secrets.KAGGLE_JSON }}" > ~/.kaggle/kaggle.json
+      #     chmod 600 ~/.kaggle/kaggle.json
+      #     # --- START DEBUGGING KAGGLE CREDENTIALS ---
+      #     echo "--- Debugging Kaggle Setup ---"
+      #     echo "Listing contents of ~/.kaggle/ :"
+      #     ls -la ~/.kaggle/
+      #     echo "Permissions of ~/.kaggle/kaggle.json :"
+      #     stat -c "%a %n" ~/.kaggle/kaggle.json # Linux command to show permissions
+      #     echo "Content of ~/.kaggle/kaggle.json (!!! CAUTION: YOUR KAGGLE API KEY WILL BE VISIBLE IN LOGS !!!):"
+      #     cat ~/.kaggle/kaggle.json
+      #     echo "Attempting a simple Kaggle CLI command to test authentication (requires 'kaggle' to be installed):"
+      #     # The path to kaggle CLI might differ; adjust if necessary based on where your pip installs to
+      #     /opt/hostedtoolcache/Python/3.9.23/x64/bin/kaggle datasets list --page 1 --page-size 5
+      #     echo "--- End Debugging Kaggle Setup ---"
+      #     # --- END DEBUGGING KAGGLE CREDENTIALS ---
 
       - name: Upload dataset to S3
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
+          KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
         run: |
           python -c "from s3_utils import upload_to_s3; \
             upload_to_s3('data/Big_Black_Money_Dataset.csv', 'aml-model-bk', 'data/Big_Black_Money_Dataset.csv')"
