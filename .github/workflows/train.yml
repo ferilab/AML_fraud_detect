@@ -25,6 +25,19 @@ jobs:
           mkdir -p ~/.kaggle
           echo "${{ secrets.KAGGLE_JSON }}" > ~/.kaggle/kaggle.json
           chmod 600 ~/.kaggle/kaggle.json
+          # --- START DEBUGGING KAGGLE CREDENTIALS ---
+          echo "--- Debugging Kaggle Setup ---"
+          echo "Listing contents of ~/.kaggle/ :"
+          ls -la ~/.kaggle/
+          echo "Permissions of ~/.kaggle/kaggle.json :"
+          stat -c "%a %n" ~/.kaggle/kaggle.json # Linux command to show permissions
+          echo "Content of ~/.kaggle/kaggle.json (!!! CAUTION: YOUR KAGGLE API KEY WILL BE VISIBLE IN LOGS !!!):"
+          cat ~/.kaggle/kaggle.json
+          echo "Attempting a simple Kaggle CLI command to test authentication (requires 'kaggle' to be installed):"
+          # The path to kaggle CLI might differ; adjust if necessary based on where your pip installs to
+          /opt/hostedtoolcache/Python/3.9.23/x64/bin/kaggle datasets list --page 1 --page-size 5
+          echo "--- End Debugging Kaggle Setup ---"
+          # --- END DEBUGGING KAGGLE CREDENTIALS ---
 
       - name: Install dependencies
         run: pip install -r requirements.txt
