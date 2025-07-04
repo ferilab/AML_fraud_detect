@@ -1,3 +1,5 @@
 /aml_fraud_detect_env
 .DS_Store
 /.ipynb_checkpoints
+/__pycache__
+/src/__pycache__

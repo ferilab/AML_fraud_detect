@@ -8,6 +8,10 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 
 if __name__ == "__main__":
+    # Tell SageMaker where to find training data and where to save the trained model, 
+    # using its built-in environment variables:
+        # SM_CHANNEL_TRAIN → input data path in container
+        # SM_MODEL_DIR → output path for the trained model
     parser = argparse.ArgumentParser()
     parser.add_argument('--output-dir', type=str, default=os.environ.get('SM_MODEL_DIR'))
     parser.add_argument('--data-dir', type=str, default=os.environ.get('SM_CHANNEL_TRAIN'))

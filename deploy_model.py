@@ -3,26 +3,32 @@ import boto3
 import sagemaker
 from sagemaker.sklearn.model import SKLearnModel
 
-# Define S3 model path
-model_data = 's3://aml-model-bk/output/aml-detect-job/output/model.tar.gz'  # Adjust job name as needed
+# Set region and session
+boto3.setup_default_session(region_name="us-east-2")
+sagemaker_session = sagemaker.Session()
 
-# SageMaker setup
-role = "arn:aws:iam::990682088412:role/SageMakerExecutionRole_AML"  # Replace with  your sagemaker role ARM
-region = "us-east-2"
-session = sagemaker.Session()
-sklearn_model = SKLearnModel(
-    model_data=model_data,
+# SageMaker role
+role = "arn:aws:iam::990682088412:role/SageMakerExecutionRole_AML"  # Replace with your IAM role's arn
+
+# Trained model path in S3 (replace with actual job output)
+aml_detect_job = "aml-fraud-detect-2025-06-30-01-14-54-193" # Adjust job name as needed
+model_s3_path = 's3://aml-model-bk/output/' + aml_detect_job + '/output/model.tar.gz'  
+
+# Create SKLearnModel from the trained model
+model = SKLearnModel(
+    model_data=model_s3_path,
     role=role,
-    entry_point='src/sagemaker_train.py',
-    framework_version='1.0-1',
-    sagemaker_session=session
+    framework_version="1.0-1",
+    entry_point="inference.py",  # Needed for inference logic
+    source_dir='.',  # Includes preprocess.py if needed
+    sagemaker_session=sagemaker_session
 )
 
-# Deploy to real-time endpoint
-predictor = sklearn_model.deploy(
-    instance_type='ml.t2.medium',
+# Deploy to an endpoint
+predictor = model.deploy(
+    instance_type="ml.t2.medium", # Hosting is faster but costier with ml.m5.large
     initial_instance_count=1,
-    endpoint_name='aml-fraud-endpoint'
+    endpoint_name="aml-fraud-detector-endpoint"
 )
 
-print("✅ Endpoint deployed as: aml-fraud-endpoint")
+print("✅ Model deployed to endpoint: aml-fraud-detector-endpoint")

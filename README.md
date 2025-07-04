@@ -1,68 +1,66 @@
 # AML_fraud_detect
+
 This Anti Money Laundering (AML) and fraud detection model performs risk assessment on international financial transactions. It is deployed on AWS S3 and SageMaker and uses GitHub Action for CI/CD.  
 
-A full real-time fraud detection pipeline using:
+A full real-time fraud detection pipeline:
 
-    - Reading data from S3 and preparing it (data is already preprocessed and feature engineeried using PCA)
-    - Model training on push via GitHub Actions using GitHub Run
-    - Model storage in S3
-    - Real-time inference via AWS Lambda + API Gateway (https endpoint)
-    - Real-time prediction with no unnecessary dependencies
+  - trigger the ETL by reading data directly from Kaggle or data folder of repository, uploading it to 
+  - preparing data for model training
+  - model training/validation on SageMaker, and uploding data and model to S3. All steps up to here with pushing updated repo to GitHub
+  - Store model in S3
+  - Deploy model on SageMaker Real-time endpoint for inference via AWS CLI
+  - Real-time prediction with CLI
+  - Cost control via manual endpoint shutdown
 
 # Dataset
 
-Includes 14708 transactions with 492 fraud cases (Class = 1). There is 30 variables (PCA) and a binary target (Class). This dataset is a downsampled version of the dataset Credit Card Fraud Detection available on https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud with all Class = 1 preserved.
+This dataset provides 10,000 financial transactions across multiple countries, focusing on risk assessment and fraud detection. It is important to explore patterns in financial movements, assess money laundering risks, and develop anti-money laundering (AML) models.
 
-The original dataset contains transactions made by credit cards in September 2013 by European cardholders.
-This dataset presents transactions that occurred in two days, where we have 492 frauds out of 284,807 transactions. The dataset is highly unbalanced, the positive class (frauds) account for 0.172% of all transactions.
-
-It contains only numerical input variables which are the result of a PCA transformation. Unfortunately, due to confidentiality issues, the original features and more background information about the data are not provided. Features V1, V2, … V28 are the principal components obtained with PCA, the only features which have not been transformed with PCA are 'Time' and 'Amount'. Feature 'Time' contains the seconds elapsed between each transaction and the first transaction in the dataset. The feature 'Amount' is the transaction Amount, this feature can be used for example-dependant cost-sensitive learning. Feature 'Class' is the response variable and it takes value 1 in case of fraud and 0 otherwise.
+With comprehensive attributes such as transaction amounts, risk scores, and entity involvement, this dataset serves as a valuable resource for understanding financial irregularities and compliance monitoring. 
 
 # Project structure
 
-aml_fraud_detection/
+aml_fraud_detect/
+├── data/
+│   └── Big_Black_Money_Dataset.csv
 ├── src/
-│   ├── preprocess.py         # Clean and prep data
-│   ├── train_model.py        # Train and save ML model
-│   └── predict.py            # Load model & make predictions
-├── sagemaker_launcher.py     # Launch SageMaker training job
-├── s3_utils.py               # Upload/download from S3
+│   ├── __init__.py
+│   ├── train_model.py      # Train and save ML model locally
+│   └── predict.py          # Local inference with the local model: python predict.py
+├── .github/workflows/
+│   └── train.yml           # GitHub Actions workflow
+├── sagemaker_train.py      # Runs SageMaker training job on SageMaker
+├── sagemaker_launcher.py   # Launch SageMaker training job
+├── deploy_model.py         # Create endpoint for real-time inference on SageMaker
+├── invoke_endpoint.py      # Inference on a new transaction
+├── stop_endpoint.py        # Stop the SageMaker real-time endpoint
+├── s3_utils.py             # Upload/download from S3
+├── preprocess.py           # prepares the dataset on Sagemaker for training job
+├── inference.py
+├── main.py                 # For local run: python main.py
+├── models/                 # Reserved for local use
 ├── requirements.txt
-├── main.py                   # Optional CLI runner
-├── models/                   # Stores .pkl models (for local testing)
-├── data/                     # For local testing only
-├── .github/
-│   └── workflows/
-│       └── train.yml         # GitHub Actions workflow
 └── README.md
 
 
-# Process flow
+# Process 
 
-+---------------------+ +-------------------+ +-------------------+
-| GitHub (main push) +-----> | GitHub Actions CI |-----> | Train model using sklearn + upload 
-|  fraud_model.pkl |
-+---------------------+ +-------------------+ +--------+----------+
+The process flow can be summarized as follows:
 
-+---------------------+
-| S3: Model Storage |
-| credit-fraud-...bk |
-+--------+------------+
+  A[Push to GitHub] --> B[GitHub Actions: train.yml]
+  B --> C[s3_utils.py uploads dataset to S3]
+  C --> D[sagemaker_launcher.py launches training job (sagemaker_train.py and preprocess.py)]
+  D --> E[Trained model saved to S3 by sagemaker_launcher.py]
+  E --> F[deploy_model.py deploys SageMaker endpoint]
+  F --> G[invoke_endpoint.py sends input (new data for inference)]
+  G --> H[Model returns prediction]
+  H --> I[stop_endpoint.py shuts down endpoint to save cost]
+  I --> F[*** Restart the endpoint if required using deploy_model.py]
 
-+------------------------+
-| AWS Lambda |
-| Loads model from S3 |
-| Performs predictions |
-+-----------+------------+
-
-+-------------------------+
-| API Gateway |
-| /predict endpoint |
-+-------------------------+
 
 # Cloud setup (AWS)
 
-You first need to fork the repo to your personal GitHub account. This repo will do the CI/CD including training and retraining of the odel for you.
+You first need to fork the repo to your personal GitHub account. This repo will do the CI/CD including training and retraining of the model for you.
 
 1. Create an AWS account (a free trail if you already don't have)
 
@@ -70,104 +68,85 @@ You first need to fork the repo to your personal GitHub account. This repo will 
 
 3. Give it full role access.
 
-4. Creats a bucket in S3 (we named it credit-fraud-detection-bk, you can make yours and update the code accordingly).
+4. Creats a bucket in S3 (we named it aml-model-bk, you can make yours and update the code accordingly).
 
-5. Go to your AWS IAM Console, under Access Keys click Create access key and choose Command Line Interface (CLI). Now create access key and save the key id and access key. Then, set the secrets of your cloned repository (Settings - Secrets and variables - Actions). Name them AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_REGION (the region you choose for your S3 bucket or Lambda).
+5. Go to your AWS IAM Console, under Access Keys click Create access key and choose Command Line Interface (CLI). Now create access key and save the key id and access key. Then, set the secrets of your cloned repository (Settings - Secrets and variables - Actions). Name them AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_REGION (the region you choose for your S3 bucket).
 
-6. Create a Lambda function (for Architecture and Runtimes choose x86_64 and Python 3.10). I named it credit-trans-fraud-detect-lambda-func but you can use yours. Now you need to give it permission to access S3 (your bucket). Create a new role (through Roles) for the function and attach this json as its inline policy. You can name it whatever you want e.g., S3ReadAccess. 
+6. Create SageMaker Execution Role
 
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": ["s3:GetObject"],
-      "Resource": "arn:aws:s3:::credit-fraud-detection-bk/*"
-    }
-  ]
-}
+Go to IAM - Roles
+Click Create role > Use case: SageMaker
+Attach policies:  AmazonSageMakerFullAccess    and     AmazonS3FullAccess (or scoped to your bucket)
+Name it (e.g., SageMakerExecutionRole_AML) and copy the Role ARN
 
-7. Assign the created role to the Lambda function you already created.
+7. Set Up AWS CLI (to start or stop the real-time endpoint from your terminal)
 
-8. zip the lambda_function.py as function.zip (if you don't have it under lambda folder or if you modified it). Upload it to the Code tab of the lambda function (select 'Upload from .zip')
-
-9. We need to connect the function to API Gateway:
-    - Create a HTTP API in Amazon API Gateway
-    - Now we link the API to our Lambda function. Integration type is Lambda and Method is POST. Lets' call the Resource '/predict'.
-    - Finally, you can deploy API that let's you to get a public URL (your real-time inference endpoint).
-
-10. Lambda Layer
-The trained model uses sklearn that includes Numpy, Scipy and joblib. Although the training process in done in GitHub run (not in Lambda), even with the trained model (uploaded to S3) the Lambda function will need those dependencies for inference. This is how we make required dependencies available for Lambda.
-
-- Make sure Docker is installed and is running on your system. Also make sure it is already added to your system path. If not, run "export PATH="/Applications/Docker.app/Contents/Resources/bin:$PATH"
-That is for mac, now run docker --version to see if it works, then re-run docker with "docker run ..."
-- In a terminal, go to the root of your package (e.g., credit_trand_fraud_detect)
-- run "mkdir -p sklearn_layer/python"
-- then run (note: we assume that you have chosen Python 3.10 and x86_64 for your Lambda function):
-docker run --rm -v "$(pwd)/sklearn_layer/python:/asset" --entrypoint /bin/bash public.ecr.aws/lambda/python:3.10-x86_64 -c "pip install scikit-learn -t /asset && exit"
-- The previous line installed the required dependencies (sklearn) in a folder named sklear_layer. zip it with:
-cd sklearn_layer
-zip -r ../sklearn_layer.zip .
-- you can go one level back with "cd .." now. The generated sklearn_layer.zip is what you need to add to the Lambda function's layer. As it is > 50 MB, you can't directly upload it to the layer. Instead, you can upload it to S3, under your bucket, create a folder named 'layer' and upload it there.
-- Go to Lambda in your AWS console, then to Layers and create a Layer. Give it a name and link it to the saved zip file on your S3 bucket. For Architecture and Runtimes choose x86_64 and Python 3.10. 
-- Finally, go to Lambda -> Functions, choose the lambda function and at the bottom of the page use 'Add layer' -> Custom to assign the layer we just created to it.
+Type 'aws configure' in terminal
+You’ll be prompted for:
+AWS Access Key ID
+AWS Secret Access Key
+Default region name: us-east-2 (your region)
+Output format: json (or just press Enter)
 
 
-# Inference Request Example
+8. Dependencies
 
-Endpoint: `https://<your-api-id>.execute-api.us-east-2.amazonaws.com/predict`
+- For cloud use, they will be installed by the pipeline module (train.yml), however, for inference you'll need to have them installed on your local drive.
+- For local use, you'll need to create a virtual environment, activate it and install requirements.txt
 
-Sample test point:
+9. Trigger Training on GitHub Push
 
-Use it in your AWS Lambda function -> Test -> Event JSON 
-{
-  "features": [0.1, -1.2, 0.3, ..., 200.0]  // 30 values total
-}
+After creating the AWS services as explained above commit and push the repository to your GitHub account. Then:
 
-Sample expected response:
+- CI/CD is handled via .github/workflows/train.yml
+- Uploads dataset using s3_utils.py
+- Triggers training using sagemaker_launcher.py
+- Saves trained model as model.tar.gz in S3
 
-{
-  "prediction": 0
-}
+10. Deploy Model to Real-Time Endpoint
 
-Inference using Python:
+Running this in terminal:
+python deploy_model.py
+will (takes several minutes):
 
-Use the run notebook.
+- Loads trained model from S3
+- Deploys using inference.py
+- Creates endpoint: aml-fraud-detector-endpoint (or the name you chave chosen for it)
+
+# Real-time Inference 
+
+Run this in terminal:
+python invoke_endpoint.py
+
+The module includes a sample transaction. You can manipulate the values. Note that the structure of the sample and variable names must be preserved.
 
 
-# Setup Instructions
+# Stop Endpoint to Save Cost
 
-git clone https://github.com/ferilab/credit_trans_fraud_detect.git
-cd credit_trans_fraud_detect
+Use in terminal:
+python stop_endpoint.py
 
-# Local use
+The most costly part of the AWS services is the endpoint here. Stop it once you finished your tests. The storage is very cheap and you can keep it for a while until you decide to remove the services completely.
 
-Prepare environment and run the main module.
+git clone https://github.com/ferilab/aml_fraud_detect.git
+cd aml_fraud_detect
 
-pip install -r requirements.txt
-python train_model.py
+# Model Details
 
-# Deploy model
+- Algorithm: RandomForestClassifier
+- Target Variable: Source of Money (0 = Legal, 1 = Illegal)
+- Feature Engineering: Extracted from transaction date and encoded categoricals
+- Training Script: sagemaker_train.py
+- Inference Logic: inference.py
 
-- Manually upload the dataset (creditcard.csv) to your bucket on S3.
+# Further improvements
 
-- Set upyour GitHub Actions secrets:
-    AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION
+Some other features that can be added to this application are:
 
-- Now, on commit and push to main, the model will be retrained and uploaded to your bucket in S3.
+- Streamlit frontend for input + results
+- Deploy behind API Gateway for public access (will be costly))
+- Add CloudWatch monitoring and alerts
 
-- Infere a sample transaction using the Test tab of your Lambda function on AWS console. The sample transaction should be like this:
-{
-    "features": [
-        118716.0, -0.39096448, -3.763199, -3.603844, 1.5876892, -0.47663704, -0.5617021, 2.1779633, -0.6973479, -0.018830955, -0.9399685, -0.35247976, 0.30234602, 0.7528182, -0.5717872, 0.4877511, 0.2844196, 0.6142388, 0.16805398, -0.70408744, 2.4774666, 0.77568394, -0.52257586, -1.0583348, 0.62635255, -0.2772192, 0.23843738, -0.30540255, 0.1863141, 1286.0
-    ]
-}
-
-- You can test the endpoint using the notebook given in the package.
-- Alternatively, you can est the endpoint directly on the terminal (note: you can modify values of the sample data):
-curl -X POST -H "Content-Type: application/json" -d '{"features": [118716.0, -0.39096448, -3.763199, -3.603844, 1.5876892, -0.47663704, -0.5617021, 2.1779633, -0.6973479, -0.018830955, -0.9399685, -0.35247976, 0.30234602, 0.7528182, -0.5717872, 0.4877511, 0.2844196, 0.6142388, 0.16805398, -0.70408744, 2.4774666, 0.77568394, -0.52257586, -1.0583348, 0.62635255, -0.2772192, 0.23843738, -0.30540255, 0.1863141, 1286.0]}' https://i9j9jpazs3.execute-api.us-east-2.amazonaws.com/predict
-
- 
 # Notes
 
 - The package is compatible with AWS Free Tier
