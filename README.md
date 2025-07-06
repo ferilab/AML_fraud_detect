@@ -89,21 +89,25 @@ Default region name: us-east-2 (your region)
 Output format: json (or just press Enter)
 
 
-8. Dependencies
+# Dependencies
 
 - For cloud use, they will be installed by the pipeline module (train.yml), however, for inference you'll need to have them installed on your local drive.
 - For local use, you'll need to create a virtual environment, activate it and install requirements.txt
 
-9. Trigger Training on GitHub Push
+# Trigger Training on GitHub Push
 
-After creating the AWS services as explained above commit and push the repository to your GitHub account. Then:
+After creating the AWS services as explained above you need to add your Kaggles account credentials that you'll find in the downloaded kaggle.json to your repo's secretsand variables -> actions -> secrets. Name them KAGGLE_USERNAME (for username) KAGGLE_KEY (for key).
+
+Note: If you prefer to directly read the data file from data folder only comment out the kaggle.api line from s3.utils.py. Just make sure you already have the data file 'Big_Black_Money_Dataset.csv' in the data folder.
+
+Now, commit and push the repository to your GitHub account. Then:
 
 - CI/CD is handled via .github/workflows/train.yml
 - Uploads dataset using s3_utils.py
 - Triggers training using sagemaker_launcher.py
 - Saves trained model as model.tar.gz in S3
 
-10. Deploy Model to Real-Time Endpoint
+# Deploy Model to Real-Time Endpoint
 
 Running this in terminal:
 python deploy_model.py
@@ -147,6 +151,21 @@ Some other features that can be added to this application are:
 - Deploy behind API Gateway for public access (will be costly))
 - Add CloudWatch monitoring and alerts
 
+
+
+
 # Notes
 
-- The package is compatible with AWS Free Tier
+- The package is compatible with AWS Free 
+
+- Alternative way to get the data file from Kaggle and then upload it to S3 through terminal (you'll unlikely need this): 
+follow these in cLI (while you'r in your package root and the virtual env is activated):
+aws configure
+You’ll be prompted for:
+
+    AWS Access Key ID
+    AWS Secret Access Key
+    Default region name: us-east-2 (your region)
+    Output format: json (or just press Enter)
+
+python -c "from s3_utils import upload_to_s3; upload_to_s3('data/Big_Black_Money_Dataset.csv', 'your-bucket-name', 'data/Big_Black_Money_Dataset.csv')"

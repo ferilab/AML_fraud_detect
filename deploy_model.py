@@ -11,7 +11,7 @@ sagemaker_session = sagemaker.Session()
 role = "arn:aws:iam::990682088412:role/SageMakerExecutionRole_AML"  # Replace with your IAM role's arn
 
 # Trained model path in S3 (replace with actual job output)
-aml_detect_job = "aml-fraud-detect-2025-06-30-01-14-54-193" # Adjust job name as needed
+aml_detect_job = "aml-fraud-detect-2025-07-04-13-46-28-830" # Adjust job name as needed
 model_s3_path = 's3://aml-model-bk/output/' + aml_detect_job + '/output/model.tar.gz'  
 
 # Create SKLearnModel from the trained model

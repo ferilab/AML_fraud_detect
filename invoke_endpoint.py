@@ -36,4 +36,4 @@ response = client.invoke_endpoint(
 
 # Get result
 result = response["Body"].read().decode()
-print("✅ Prediction:", result)
+print("✅ Prediction:",  'Illegal' if result == 1 else 'Legal')
